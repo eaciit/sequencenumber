@@ -1,14 +1,16 @@
 package sequencenumber
 
 import (
-	"github.com/eaciit/database/mongodb"
-	"github.com/eaciit/orm"
+	"github.com/eaciit/dbox"
+	_ "github.com/eaciit/dbox/dbc/mongo"
+	"github.com/eaciit/orm/v1"
 	"testing"
 )
 
 func prepareOrm() (*orm.DataContext, error) {
-	conn := mongodb.NewConnection("localhost:27123", "", "", "ectest")
-	e := conn.Connect()
+	conn, e := dbox.NewConnection("mongo",
+		&dbox.ConnectionInfo{"localhost:27123", "ectest", "", "", nil})
+	e = conn.Connect()
 	if e != nil {
 		return nil, e
 	}
@@ -25,7 +27,10 @@ func TestCreate(t *testing.T) {
 	defer ctx.Close()
 
 	Ctx = ctx
-	s, _ := Get("General", true)
+	s, e := Get("General", true)
+	if e != nil {
+		t.Fatal(e)
+	}
 	s.Save()
 }
 
@@ -37,11 +42,10 @@ func TestClaim(t *testing.T) {
 	defer ctx.Close()
 
 	Ctx = ctx
-	s, e := Get("General", true)
+	s, e := Get("General", false)
 	if e != nil {
 		t.Error(e.Error())
 	}
-	s.UseLog = true
 	i := s.LastNo + 1
 	claimed, e := s.Claim()
 	if e != nil {
