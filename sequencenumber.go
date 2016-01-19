@@ -23,11 +23,11 @@ var objUsedSequence = "UsedSequence"
 
 type Sequence struct {
 	orm.ModelBase
-	Id     string `json:"_id",bson:"_id"`
-	Title  string
-	LastNo int
-	UseLog bool
-	Format string
+	Id          string `json:"_id",bson:"_id"`
+	Title       string
+	LastNo      int
+	ReuseNumber bool
+	Format      string
 }
 
 type UsedSequence struct {
@@ -134,7 +134,7 @@ func (s *Sequence) Claim() (int, error) {
 	}
 	latestNo = latest.LastNo + 1
 
-	if s.UseLog {
+	if s.ReuseNumber {
 		used := new(UsedSequence)
 		c, e := Ctx.Connection.NewQuery().From(s.TableName()).Order("no").Where(
 			dbox.Eq("sequenceid", s.Id), dbox.Eq("status", NumberStatus_Available)).Cursor(nil)
@@ -152,7 +152,7 @@ func (s *Sequence) Claim() (int, error) {
 	ret := s.LastNo
 	e = Ctx.Save(s)
 
-	if e == nil && s.UseLog {
+	if e == nil && s.ReuseNumber {
 		e = s.ChangeNumberStatus(ret, NumberStatus_Used)
 	}
 	return ret, e
